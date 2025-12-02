@@ -344,7 +344,7 @@ class _FixedTrimViewerState extends State<FixedTrimViewer>
     if (_dragType == EditorDragType.left) {
       _startCircleSize = widget.editorProperties.circleSizeOnDrag;
       if ((_startPos.dx + details.delta.dx >= 0) &&
-          (_startPos.dx + details.delta.dx <= _endPos.dx) && 
+          (_startPos.dx + details.delta.dx <= _endPos.dx) &&
           !(_endPos.dx - _startPos.dx - details.delta.dx > maxLengthPixels!)) {
         _startPos += details.delta;
         _onStartDragged();
@@ -420,6 +420,8 @@ class _FixedTrimViewerState extends State<FixedTrimViewer>
 
   @override
   Widget build(BuildContext context) {
+    final double borderWidth = widget.editorProperties.borderWidth;
+
     return GestureDetector(
       onHorizontalDragStart: _onDragStart,
       onHorizontalDragUpdate: _onDragUpdate,
@@ -436,11 +438,20 @@ class _FixedTrimViewerState extends State<FixedTrimViewer>
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       mainAxisSize: MainAxisSize.max,
                       children: <Widget>[
-                        Text(Duration(milliseconds: _videoStartPos.toInt()).format(widget.durationStyle), style: widget.durationTextStyle),
+                        Text(
+                            Duration(milliseconds: _videoStartPos.toInt())
+                                .format(widget.durationStyle),
+                            style: widget.durationTextStyle),
                         videoPlayerController.value.isPlaying
-                            ? Text(Duration(milliseconds: _currentPosition.toInt()).format(widget.durationStyle), style: widget.durationTextStyle)
+                            ? Text(
+                                Duration(milliseconds: _currentPosition.toInt())
+                                    .format(widget.durationStyle),
+                                style: widget.durationTextStyle)
                             : Container(),
-                        Text(Duration(milliseconds: _videoEndPos.toInt()).format(widget.durationStyle), style: widget.durationTextStyle),
+                        Text(
+                            Duration(milliseconds: _videoEndPos.toInt())
+                                .format(widget.durationStyle),
+                            style: widget.durationTextStyle),
                       ],
                     ),
                   ),
@@ -448,27 +459,38 @@ class _FixedTrimViewerState extends State<FixedTrimViewer>
               : Container(),
           SizedBox(
             height: _thumbnailViewerH,
-            width: _thumbnailViewerW == 0.0 ? widget.viewerWidth : _thumbnailViewerW,
+            width: _thumbnailViewerW == 0.0
+                ? widget.viewerWidth
+                : _thumbnailViewerW,
             child: Stack(
-              clipBehavior: Clip.none, // Quan trọng: Để handle không bị cắt khi lòi ra ngoài
+              clipBehavior: Clip.none,
               children: [
                 ClipRRect(
-                  borderRadius: BorderRadius.circular(widget.areaProperties.borderRadius),
+                  borderRadius:
+                      BorderRadius.circular(widget.areaProperties.borderRadius),
                   child: Container(
                     key: _trimmerAreaKey,
                     color: Colors.grey[900],
                     height: _thumbnailViewerH,
-                    width: _thumbnailViewerW == 0.0 ? widget.viewerWidth : _thumbnailViewerW,
+                    width: _thumbnailViewerW == 0.0
+                        ? widget.viewerWidth
+                        : _thumbnailViewerW,
                     child: thumbnailWidget ?? Container(),
                   ),
                 ),
                 if (widget.areaProperties.blurEdges) ...[
                   Positioned(
-                    left: 0, width: _startPos.dx, top: 0, bottom: 0,
+                    left: 0,
+                    width: _startPos.dx,
+                    top: 0,
+                    bottom: 0,
                     child: Container(color: widget.areaProperties.blurColor),
                   ),
                   Positioned(
-                    left: _endPos.dx, right: 0, top: 0, bottom: 0,
+                    left: _endPos.dx,
+                    right: 0,
+                    top: 0,
+                    bottom: 0,
                     child: Container(color: widget.areaProperties.blurColor),
                   ),
                 ],
@@ -484,28 +506,22 @@ class _FixedTrimViewerState extends State<FixedTrimViewer>
                     scrubberWidth: widget.editorProperties.scrubberWidth,
                     circlePaintColor: widget.editorProperties.circlePaintColor,
                     borderPaintColor: widget.editorProperties.borderPaintColor,
-                    scrubberPaintColor: widget.editorProperties.scrubberPaintColor,
+                    scrubberPaintColor:
+                        widget.editorProperties.scrubberPaintColor,
                   ),
                 ),
-
-                // --- START ICON (Handle Trái) ---
                 if (widget.areaProperties.startIcon != null)
                   Positioned(
-                    // FIX: Trừ đi 16px (width của icon) để nó nằm hoàn toàn bên TRÁI vạch start
-                    left: _startPos.dx - 16, 
-                    top: 0,
-                    bottom: 0,
+                    left: _startPos.dx - 16,
+                    top: - borderWidth,
+                    bottom: - borderWidth,
                     child: widget.areaProperties.startIcon!,
                   ),
-
-                // --- END ICON (Handle Phải) ---
                 if (widget.areaProperties.endIcon != null)
                   Positioned(
-                    // FIX: Giữ nguyên _endPos.dx để nó nằm hoàn toàn bên PHẢI vạch end
-                    // (Code cũ là trừ 16, giờ ta bỏ đi)
-                    left: _endPos.dx, 
-                    top: 0,
-                    bottom: 0,
+                    left: _endPos.dx,
+                    top: - borderWidth,
+                    bottom: - borderWidth,
                     child: widget.areaProperties.endIcon!,
                   ),
               ],
