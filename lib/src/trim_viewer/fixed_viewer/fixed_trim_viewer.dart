@@ -507,28 +507,18 @@ class _FixedTrimViewerState extends State<FixedTrimViewer>
                   ),
                 ),
                 if (widget.areaProperties.startIcon != null)
-                  GestureDetector(
-                    onHorizontalDragStart: _onDragStart,
-                    onHorizontalDragUpdate: _onDragUpdate,
-                    onHorizontalDragEnd: _onDragEnd,
-                    child: Positioned(
-                      left: _startPos.dx - 16,
-                      top: -borderWidth / 2,
-                      bottom: -borderWidth / 2,
-                      child: widget.areaProperties.startIcon!,
-                    ),
+                  Positioned(
+                    left: _startPos.dx - 16,
+                    top: - borderWidth / 2,
+                    bottom: - borderWidth / 2,
+                    child: widget.areaProperties.startIcon!,
                   ),
                 if (widget.areaProperties.endIcon != null)
-                  GestureDetector(
-                    onHorizontalDragStart: _onDragStart,
-                    onHorizontalDragUpdate: _onDragUpdate,
-                    onHorizontalDragEnd: _onDragEnd,
-                    child: Positioned(
-                      left: _endPos.dx,
-                      top: - borderWidth / 2,
-                      bottom: - borderWidth / 2,
-                      child: widget.areaProperties.endIcon!,
-                    ),
+                  Positioned(
+                    left: _endPos.dx,
+                    top: - borderWidth / 2,
+                    bottom: - borderWidth / 2,
+                    child: widget.areaProperties.endIcon!,
                   ),
               ],
             ),
