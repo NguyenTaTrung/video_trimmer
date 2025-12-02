@@ -465,18 +465,14 @@ class _FixedTrimViewerState extends State<FixedTrimViewer>
             child: Stack(
               clipBehavior: Clip.none,
               children: [
-                ClipRRect(
-                  borderRadius:
-                      BorderRadius.circular(widget.areaProperties.borderRadius),
-                  child: Container(
-                    key: _trimmerAreaKey,
-                    color: Colors.grey[900],
-                    height: _thumbnailViewerH,
-                    width: _thumbnailViewerW == 0.0
-                        ? widget.viewerWidth
-                        : _thumbnailViewerW,
-                    child: thumbnailWidget ?? Container(),
-                  ),
+                Container(
+                  key: _trimmerAreaKey,
+                  color: Colors.grey[900],
+                  height: _thumbnailViewerH,
+                  width: _thumbnailViewerW == 0.0
+                      ? widget.viewerWidth
+                      : _thumbnailViewerW,
+                  child: thumbnailWidget ?? Container(),
                 ),
                 if (widget.areaProperties.blurEdges) ...[
                   Positioned(
