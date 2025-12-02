@@ -509,15 +509,15 @@ class _FixedTrimViewerState extends State<FixedTrimViewer>
                 if (widget.areaProperties.startIcon != null)
                   Positioned(
                     left: _startPos.dx - 16,
-                    top: - borderWidth,
-                    bottom: - borderWidth,
+                    top: - borderWidth / 2,
+                    bottom: - borderWidth / 2,
                     child: widget.areaProperties.startIcon!,
                   ),
                 if (widget.areaProperties.endIcon != null)
                   Positioned(
                     left: _endPos.dx,
-                    top: - borderWidth,
-                    bottom: - borderWidth,
+                    top: - borderWidth / 2,
+                    bottom: - borderWidth / 2,
                     child: widget.areaProperties.endIcon!,
                   ),
               ],
