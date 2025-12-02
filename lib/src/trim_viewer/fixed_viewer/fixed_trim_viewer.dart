@@ -421,17 +421,19 @@ class _FixedTrimViewerState extends State<FixedTrimViewer>
 
   @override
   Widget build(BuildContext context) {
+    // Lấy độ dày viền (thường là 4.0)
     final double borderWidth = widget.editorProperties.borderWidth;
-    final double halfBorder = borderWidth / 2;
 
     return GestureDetector(
       onHorizontalDragStart: _onDragStart,
       onHorizontalDragUpdate: _onDragUpdate,
       onHorizontalDragEnd: _onDragEnd,
-      behavior: HitTestBehavior.opaque,
+      behavior: HitTestBehavior.opaque, // Bắt sự kiện chạm ở vùng padding
       child: Container(
+        // Padding trong suốt để mở rộng vùng kéo (Fix lỗi không kéo được)
         padding: EdgeInsets.symmetric(horizontal: _touchPadding),
         color: Colors.transparent,
+        
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
@@ -463,14 +465,16 @@ class _FixedTrimViewerState extends State<FixedTrimViewer>
                     ),
                   )
                 : Container(),
+            
             SizedBox(
               height: _thumbnailViewerH,
               width: _thumbnailViewerW == 0.0
                   ? widget.viewerWidth
                   : _thumbnailViewerW,
               child: Stack(
-                clipBehavior: Clip.none,
+                clipBehavior: Clip.none, // Để Handle lòi ra ngoài không bị cắt
                 children: [
+                  // Lớp 1: Nền & Thumbnails
                   ClipRRect(
                     borderRadius:
                         BorderRadius.circular(widget.areaProperties.borderRadius),
@@ -484,6 +488,8 @@ class _FixedTrimViewerState extends State<FixedTrimViewer>
                       child: thumbnailWidget ?? Container(),
                     ),
                   ),
+
+                  // Lớp 2: Blur 2 bên
                   if (widget.areaProperties.blurEdges) ...[
                     Positioned(
                       left: 0,
@@ -500,6 +506,8 @@ class _FixedTrimViewerState extends State<FixedTrimViewer>
                       child: Container(color: widget.areaProperties.blurColor),
                     ),
                   ],
+
+                  // Lớp 3: Viền (Border)
                   CustomPaint(
                     foregroundPainter: TrimEditorPainter(
                       startPos: _startPos,
@@ -508,7 +516,7 @@ class _FixedTrimViewerState extends State<FixedTrimViewer>
                       startCircleSize: _startCircleSize,
                       endCircleSize: _endCircleSize,
                       borderRadius: _borderRadius,
-                      borderWidth: widget.editorProperties.borderWidth,
+                      borderWidth: borderWidth,
                       scrubberWidth: widget.editorProperties.scrubberWidth,
                       circlePaintColor: widget.editorProperties.circlePaintColor,
                       borderPaintColor: widget.editorProperties.borderPaintColor,
@@ -516,18 +524,26 @@ class _FixedTrimViewerState extends State<FixedTrimViewer>
                           widget.editorProperties.scrubberPaintColor,
                     ),
                   ),
+                  
+                  // Lớp 4: Handle Start
                   if (widget.areaProperties.startIcon != null)
                     Positioned(
-                      left: _startPos.dx - 16 + halfBorder,
-                      top: halfBorder,
-                      bottom: halfBorder,
+                      // Left: Dịch sang trái 16px (width icon), cộng 2px (nửa viền) để đè lên -> Liền mạch
+                      left: _startPos.dx - 16 + (borderWidth / 2),
+                      // Top/Bottom: 0 để FULL chiều cao -> Thẳng tắp với khung
+                      top: 0,
+                      bottom: 0,
                       child: widget.areaProperties.startIcon!,
                     ),
+                  
+                  // Lớp 5: Handle End
                   if (widget.areaProperties.endIcon != null)
                     Positioned(
-                      left: _endPos.dx - halfBorder,
-                      top: halfBorder,
-                      bottom: halfBorder,
+                      // Left: Dịch sang trái 2px (nửa viền) để đè lên -> Liền mạch
+                      left: _endPos.dx - (borderWidth / 2),
+                      // Top/Bottom: 0 để FULL chiều cao -> Thẳng tắp với khung
+                      top: 0,
+                      bottom: 0,
                       child: widget.areaProperties.endIcon!,
                     ),
                 ],
