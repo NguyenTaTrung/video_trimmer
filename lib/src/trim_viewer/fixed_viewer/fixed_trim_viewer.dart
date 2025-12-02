@@ -180,6 +180,7 @@ class _FixedTrimViewerState extends State<FixedTrimViewer>
   /// Whether the dragging is allowed. Dragging is ignore if the user's gesture is outside
   /// of the frame, to make the UI more realistic.
   bool _allowDrag = true;
+  final double _touchPadding = 24.0;
 
   @override
   void initState() {
@@ -309,13 +310,15 @@ class _FixedTrimViewerState extends State<FixedTrimViewer>
     debugPrint((_startPos.dx - details.localPosition.dx).abs().toString());
     debugPrint((_endPos.dx - details.localPosition.dx).abs().toString());
 
-    final startDifference = _startPos.dx - details.localPosition.dx;
-    final endDifference = _endPos.dx - details.localPosition.dx;
+    final touchDx = details.localPosition.dx - _touchPadding;
+
+    final startDifference = _startPos.dx - touchDx;
+    final endDifference = _endPos.dx - touchDx;
 
     // First we determine whether the dragging motion should be allowed. The allowed
     // zone is widget.sideTapSize (left) + frame (center) + widget.sideTapSize (right)
-    if (startDifference <= widget.editorProperties.sideTapSize &&
-        endDifference >= -widget.editorProperties.sideTapSize) {
+    if (startDifference <= widget.editorProperties.sideTapSize + _touchPadding &&
+        endDifference >= -(widget.editorProperties.sideTapSize + _touchPadding)) {
       _allowDrag = true;
     } else {
       debugPrint("Dragging is outside of frame, ignoring gesture...");
@@ -324,11 +327,9 @@ class _FixedTrimViewerState extends State<FixedTrimViewer>
     }
 
     // Now we determine which part is dragged
-    if (details.localPosition.dx <=
-        _startPos.dx + widget.editorProperties.sideTapSize) {
+    if (touchDx <= _startPos.dx + widget.editorProperties.sideTapSize) {
       _dragType = EditorDragType.left;
-    } else if (details.localPosition.dx <=
-        _endPos.dx - widget.editorProperties.sideTapSize) {
+    } else if (touchDx <= _endPos.dx - widget.editorProperties.sideTapSize) {
       _dragType = EditorDragType.center;
     } else {
       _dragType = EditorDragType.right;
@@ -420,112 +421,120 @@ class _FixedTrimViewerState extends State<FixedTrimViewer>
 
   @override
   Widget build(BuildContext context) {
+    final double borderWidth = widget.editorProperties.borderWidth;
+    final double halfBorder = borderWidth / 2;
+
     return GestureDetector(
       onHorizontalDragStart: _onDragStart,
       onHorizontalDragUpdate: _onDragUpdate,
       onHorizontalDragEnd: _onDragEnd,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: <Widget>[
-          widget.showDuration
-              ? SizedBox(
-                  width: _thumbnailViewerW,
-                  child: Padding(
-                    padding: const EdgeInsets.only(bottom: 8.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      mainAxisSize: MainAxisSize.max,
-                      children: <Widget>[
-                        Text(
-                            Duration(milliseconds: _videoStartPos.toInt())
-                                .format(widget.durationStyle),
-                            style: widget.durationTextStyle),
-                        videoPlayerController.value.isPlaying
-                            ? Text(
-                                Duration(milliseconds: _currentPosition.toInt())
-                                    .format(widget.durationStyle),
-                                style: widget.durationTextStyle)
-                            : Container(),
-                        Text(
-                            Duration(milliseconds: _videoEndPos.toInt())
-                                .format(widget.durationStyle),
-                            style: widget.durationTextStyle),
-                      ],
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: _touchPadding),
+        color: Colors.transparent,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            widget.showDuration
+                ? SizedBox(
+                    width: _thumbnailViewerW,
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 8.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        mainAxisSize: MainAxisSize.max,
+                        children: <Widget>[
+                          Text(
+                              Duration(milliseconds: _videoStartPos.toInt())
+                                  .format(widget.durationStyle),
+                              style: widget.durationTextStyle),
+                          videoPlayerController.value.isPlaying
+                              ? Text(
+                                  Duration(milliseconds: _currentPosition.toInt())
+                                      .format(widget.durationStyle),
+                                  style: widget.durationTextStyle)
+                              : Container(),
+                          Text(
+                              Duration(milliseconds: _videoEndPos.toInt())
+                                  .format(widget.durationStyle),
+                              style: widget.durationTextStyle),
+                        ],
+                      ),
+                    ),
+                  )
+                : Container(),
+            SizedBox(
+              height: _thumbnailViewerH,
+              width: _thumbnailViewerW == 0.0
+                  ? widget.viewerWidth
+                  : _thumbnailViewerW,
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  ClipRRect(
+                    borderRadius:
+                        BorderRadius.circular(widget.areaProperties.borderRadius),
+                    child: Container(
+                      key: _trimmerAreaKey,
+                      color: Colors.grey[900],
+                      height: _thumbnailViewerH,
+                      width: _thumbnailViewerW == 0.0
+                          ? widget.viewerWidth
+                          : _thumbnailViewerW,
+                      child: thumbnailWidget ?? Container(),
                     ),
                   ),
-                )
-              : Container(),
-          SizedBox(
-            height: _thumbnailViewerH,
-            width: _thumbnailViewerW == 0.0
-                ? widget.viewerWidth
-                : _thumbnailViewerW,
-            child: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                ClipRRect(
-                  borderRadius:
-                      BorderRadius.circular(widget.areaProperties.borderRadius),
-                  child: Container(
-                    key: _trimmerAreaKey,
-                    color: Colors.grey[900],
-                    height: _thumbnailViewerH,
-                    width: _thumbnailViewerW == 0.0
-                        ? widget.viewerWidth
-                        : _thumbnailViewerW,
-                    child: thumbnailWidget ?? Container(),
+                  if (widget.areaProperties.blurEdges) ...[
+                    Positioned(
+                      left: 0,
+                      width: _startPos.dx,
+                      top: 0,
+                      bottom: 0,
+                      child: Container(color: widget.areaProperties.blurColor),
+                    ),
+                    Positioned(
+                      left: _endPos.dx,
+                      right: 0,
+                      top: 0,
+                      bottom: 0,
+                      child: Container(color: widget.areaProperties.blurColor),
+                    ),
+                  ],
+                  CustomPaint(
+                    foregroundPainter: TrimEditorPainter(
+                      startPos: _startPos,
+                      endPos: _endPos,
+                      scrubberAnimationDx: _scrubberAnimation?.value ?? 0,
+                      startCircleSize: _startCircleSize,
+                      endCircleSize: _endCircleSize,
+                      borderRadius: _borderRadius,
+                      borderWidth: widget.editorProperties.borderWidth,
+                      scrubberWidth: widget.editorProperties.scrubberWidth,
+                      circlePaintColor: widget.editorProperties.circlePaintColor,
+                      borderPaintColor: widget.editorProperties.borderPaintColor,
+                      scrubberPaintColor:
+                          widget.editorProperties.scrubberPaintColor,
+                    ),
                   ),
-                ),
-                if (widget.areaProperties.blurEdges) ...[
-                  Positioned(
-                    left: 0,
-                    width: _startPos.dx,
-                    top: 0,
-                    bottom: 0,
-                    child: Container(color: widget.areaProperties.blurColor),
-                  ),
-                  Positioned(
-                    left: _endPos.dx,
-                    right: 0,
-                    top: 0,
-                    bottom: 0,
-                    child: Container(color: widget.areaProperties.blurColor),
-                  ),
+                  if (widget.areaProperties.startIcon != null)
+                    Positioned(
+                      left: _startPos.dx - 16,
+                      top: halfBorder,
+                      bottom: halfBorder,
+                      child: widget.areaProperties.startIcon!,
+                    ),
+                  if (widget.areaProperties.endIcon != null)
+                    Positioned(
+                      left: _endPos.dx,
+                      top: halfBorder,
+                      bottom: halfBorder,
+                      child: widget.areaProperties.endIcon!,
+                    ),
                 ],
-                CustomPaint(
-                  foregroundPainter: TrimEditorPainter(
-                    startPos: _startPos,
-                    endPos: _endPos,
-                    scrubberAnimationDx: _scrubberAnimation?.value ?? 0,
-                    startCircleSize: _startCircleSize,
-                    endCircleSize: _endCircleSize,
-                    borderRadius: _borderRadius,
-                    borderWidth: widget.editorProperties.borderWidth,
-                    scrubberWidth: widget.editorProperties.scrubberWidth,
-                    circlePaintColor: widget.editorProperties.circlePaintColor,
-                    borderPaintColor: widget.editorProperties.borderPaintColor,
-                    scrubberPaintColor:
-                        widget.editorProperties.scrubberPaintColor,
-                  ),
-                ),
-                if (widget.areaProperties.startIcon != null)
-                  Positioned(
-                    left: _startPos.dx - 16,
-                    top: 0,
-                    bottom: 0,
-                    child: widget.areaProperties.startIcon!,
-                  ),
-                if (widget.areaProperties.endIcon != null)
-                  Positioned(
-                    left: _endPos.dx,
-                    top: 0,
-                    bottom: 0,
-                    child: widget.areaProperties.endIcon!,
-                  ),
-              ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
