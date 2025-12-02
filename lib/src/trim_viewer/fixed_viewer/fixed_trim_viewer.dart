@@ -14,104 +14,20 @@ import '../trim_editor_properties.dart';
 import 'fixed_thumbnail_viewer.dart';
 
 class FixedTrimViewer extends StatefulWidget {
-  /// The Trimmer instance controlling the data.
   final Trimmer trimmer;
-
-  /// For defining the total trimmer area width
   final double viewerWidth;
-
-  /// For defining the total trimmer area height
   final double viewerHeight;
-
-  /// For defining the maximum length of the output video.
   final Duration maxVideoLength;
-
-  /// For showing the start and the end point of the
-  /// video on top of the trimmer area.
-  ///
-  /// By default it is set to `true`.
   final bool showDuration;
-
-  /// For providing a `TextStyle` to the
-  /// duration text.
-  ///
-  /// By default it is set to `TextStyle(color: Colors.white)`
   final TextStyle durationTextStyle;
-
-  /// For specifying a style of the duration
-  ///
-  /// By default it is set to `DurationStyle.FORMAT_HH_MM_SS`.
   final DurationStyle durationStyle;
-
-  /// Callback to the video start position
-  ///
-  /// Returns the selected video start position in `milliseconds`.
   final Function(double startValue)? onChangeStart;
-
-  /// Callback to the video end position.
-  ///
-  /// Returns the selected video end position in `milliseconds`.
   final Function(double endValue)? onChangeEnd;
-
-  /// Callback to the video playback
-  /// state to know whether it is currently playing or paused.
-  ///
-  /// Returns a `boolean` value. If `true`, video is currently
-  /// playing, otherwise paused.
   final Function(bool isPlaying)? onChangePlaybackState;
-
-  /// Properties for customizing the trim editor.
   final TrimEditorProperties editorProperties;
-
-  /// Properties for customizing the fixed trim area.
   final TrimAreaProperties areaProperties;
-
   final VoidCallback onThumbnailLoadingComplete;
 
-  /// Widget for displaying the video trimmer.
-  ///
-  /// This has frame wise preview of the video with a
-  /// slider for selecting the part of the video to be
-  /// trimmed.
-  ///
-  /// The required parameters are [viewerWidth] & [viewerHeight]
-  ///
-  /// * [viewerWidth] to define the total trimmer area width.
-  ///
-  ///
-  /// * [viewerHeight] to define the total trimmer area height.
-  ///
-  ///
-  /// The optional parameters are:
-  ///
-  /// * [maxVideoLength] for specifying the maximum length of the
-  /// output video.
-  ///
-  ///
-  /// * [showDuration] for showing the start and the end point of the
-  /// video on top of the trimmer area. By default it is set to `true`.
-  ///
-  ///
-  /// * [durationTextStyle] is for providing a `TextStyle` to the
-  /// duration text. By default it is set to
-  /// `TextStyle(color: Colors.white)`
-  ///
-  ///
-  /// * [onChangeStart] is a callback to the video start position.
-  ///
-  ///
-  /// * [onChangeEnd] is a callback to the video end position.
-  ///
-  ///
-  /// * [onChangePlaybackState] is a callback to the video playback
-  /// state to know whether it is currently playing or paused.
-  ///
-  ///
-  /// * [editorProperties] defines properties for customizing the trim editor.
-  ///
-  ///
-  /// * [areaProperties] defines properties for customizing the fixed trim area.
-  ///
   const FixedTrimViewer({
     super.key,
     required this.trimmer,
@@ -126,7 +42,7 @@ class FixedTrimViewer extends StatefulWidget {
     this.onChangeEnd,
     this.onChangePlaybackState,
     this.editorProperties = const TrimEditorProperties(),
-    this.areaProperties = const FixedTrimAreaProperties(),
+    this.areaProperties = const TrimAreaProperties(),
   });
 
   @override
@@ -168,18 +84,13 @@ class _FixedTrimViewerState extends State<FixedTrimViewer>
   AnimationController? _animationController;
   late Tween<double> _linearTween;
 
-  /// Quick access to VideoPlayerController, only not null after [TrimmerEvent.initialized]
-  /// has been emitted.
   VideoPlayerController get videoPlayerController =>
       widget.trimmer.videoPlayerController!;
 
-  /// Keep track of the drag type, e.g. whether the user drags the left, center or
-  /// right part of the frame. Set this in [_onDragStart] when the dragging starts.
   EditorDragType _dragType = EditorDragType.left;
-
-  /// Whether the dragging is allowed. Dragging is ignore if the user's gesture is outside
-  /// of the frame, to make the UI more realistic.
   bool _allowDrag = true;
+
+  // Padding mở rộng vùng chạm để bắt được icon nằm ngoài (QUAN TRỌNG)
   final double _touchPadding = 24.0;
 
   @override
@@ -189,19 +100,15 @@ class _FixedTrimViewerState extends State<FixedTrimViewer>
     _endCircleSize = widget.editorProperties.circleSize;
     _borderRadius = widget.editorProperties.borderRadius;
     _thumbnailViewerH = widget.viewerHeight;
-    log('thumbnailViewerW: $_thumbnailViewerW');
     SchedulerBinding.instance.addPostFrameCallback((_) {
       final renderBox =
           _trimmerAreaKey.currentContext?.findRenderObject() as RenderBox?;
       final trimmerActualWidth = renderBox?.size.width;
-      log('RENDER BOX: $trimmerActualWidth');
       if (trimmerActualWidth == null) return;
       _thumbnailViewerW = trimmerActualWidth;
       _initializeVideoController();
       videoPlayerController.seekTo(const Duration(milliseconds: 0));
       _numberOfThumbnails = trimmerActualWidth ~/ _thumbnailViewerH;
-      log('numberOfThumbnails: $_numberOfThumbnails');
-      log('thumbnailViewerW: $_thumbnailViewerW');
       setState(() {
         _thumbnailViewerW = _numberOfThumbnails * _thumbnailViewerH;
 
@@ -240,7 +147,6 @@ class _FixedTrimViewerState extends State<FixedTrimViewer>
           _thumbnailViewerH,
         );
 
-        // Defining the tween points
         _linearTween = Tween(begin: _startPos.dx, end: _endPos.dx);
         _animationController = AnimationController(
           vsync: this,
@@ -302,31 +208,22 @@ class _FixedTrimViewerState extends State<FixedTrimViewer>
     }
   }
 
-  /// Called when the user starts dragging the frame, on either side on the whole frame.
-  /// Determine which [EditorDragType] is used.
   void _onDragStart(DragStartDetails details) {
-    debugPrint("_onDragStart");
-    debugPrint(details.localPosition.toString());
-    debugPrint((_startPos.dx - details.localPosition.dx).abs().toString());
-    debugPrint((_endPos.dx - details.localPosition.dx).abs().toString());
-
+    // FIX: Trừ padding để lấy toạ độ thực tế so với video
     final touchDx = details.localPosition.dx - _touchPadding;
-
+    
     final startDifference = _startPos.dx - touchDx;
     final endDifference = _endPos.dx - touchDx;
 
-    // First we determine whether the dragging motion should be allowed. The allowed
-    // zone is widget.sideTapSize (left) + frame (center) + widget.sideTapSize (right)
+    // Check vùng drag (đã tính cả padding)
     if (startDifference <= widget.editorProperties.sideTapSize + _touchPadding &&
         endDifference >= -(widget.editorProperties.sideTapSize + _touchPadding)) {
       _allowDrag = true;
     } else {
-      debugPrint("Dragging is outside of frame, ignoring gesture...");
       _allowDrag = false;
       return;
     }
 
-    // Now we determine which part is dragged
     if (touchDx <= _startPos.dx + widget.editorProperties.sideTapSize) {
       _dragType = EditorDragType.left;
     } else if (touchDx <= _endPos.dx - widget.editorProperties.sideTapSize) {
@@ -336,14 +233,12 @@ class _FixedTrimViewerState extends State<FixedTrimViewer>
     }
   }
 
-  /// Called during dragging, only executed if [_allowDrag] was set to true in
-  /// [_onDragStart].
-  /// Makes sure the limits are respected.
   void _onDragUpdate(DragUpdateDetails details) {
     if (!_allowDrag) return;
 
     if (_dragType == EditorDragType.left) {
       _startCircleSize = widget.editorProperties.circleSizeOnDrag;
+      // Cho phép kéo Start chạm End
       if ((_startPos.dx + details.delta.dx >= 0) &&
           (_startPos.dx + details.delta.dx <= _endPos.dx) &&
           !(_endPos.dx - _startPos.dx - details.delta.dx > maxLengthPixels!)) {
@@ -362,6 +257,7 @@ class _FixedTrimViewerState extends State<FixedTrimViewer>
       }
     } else {
       _endCircleSize = widget.editorProperties.circleSizeOnDrag;
+      // Cho phép kéo End chạm Start
       if ((_endPos.dx + details.delta.dx <= _thumbnailViewerW) &&
           (_endPos.dx + details.delta.dx >= _startPos.dx) &&
           !(_endPos.dx - _startPos.dx + details.delta.dx > maxLengthPixels!)) {
@@ -392,7 +288,6 @@ class _FixedTrimViewerState extends State<FixedTrimViewer>
     _animationController!.reset();
   }
 
-  /// Drag gesture ended, update UI accordingly.
   void _onDragEnd(DragEndDetails details) {
     setState(() {
       _startCircleSize = widget.editorProperties.circleSize;
@@ -421,16 +316,16 @@ class _FixedTrimViewerState extends State<FixedTrimViewer>
 
   @override
   Widget build(BuildContext context) {
-    // Lấy độ dày viền (thường là 4.0)
+    // Thông số để tính toán overlap
     final double borderWidth = widget.editorProperties.borderWidth;
-
+    
     return GestureDetector(
       onHorizontalDragStart: _onDragStart,
       onHorizontalDragUpdate: _onDragUpdate,
       onHorizontalDragEnd: _onDragEnd,
-      behavior: HitTestBehavior.opaque, // Bắt sự kiện chạm ở vùng padding
+      behavior: HitTestBehavior.opaque,
       child: Container(
-        // Padding trong suốt để mở rộng vùng kéo (Fix lỗi không kéo được)
+        // FIX: Padding mở rộng vùng chạm để bắt được icon nằm ngoài
         padding: EdgeInsets.symmetric(horizontal: _touchPadding),
         color: Colors.transparent,
         
@@ -446,20 +341,11 @@ class _FixedTrimViewerState extends State<FixedTrimViewer>
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         mainAxisSize: MainAxisSize.max,
                         children: <Widget>[
-                          Text(
-                              Duration(milliseconds: _videoStartPos.toInt())
-                                  .format(widget.durationStyle),
-                              style: widget.durationTextStyle),
+                          Text(Duration(milliseconds: _videoStartPos.toInt()).format(widget.durationStyle), style: widget.durationTextStyle),
                           videoPlayerController.value.isPlaying
-                              ? Text(
-                                  Duration(milliseconds: _currentPosition.toInt())
-                                      .format(widget.durationStyle),
-                                  style: widget.durationTextStyle)
+                              ? Text(Duration(milliseconds: _currentPosition.toInt()).format(widget.durationStyle), style: widget.durationTextStyle)
                               : Container(),
-                          Text(
-                              Duration(milliseconds: _videoEndPos.toInt())
-                                  .format(widget.durationStyle),
-                              style: widget.durationTextStyle),
+                          Text(Duration(milliseconds: _videoEndPos.toInt()).format(widget.durationStyle), style: widget.durationTextStyle),
                         ],
                       ),
                     ),
@@ -468,23 +354,18 @@ class _FixedTrimViewerState extends State<FixedTrimViewer>
             
             SizedBox(
               height: _thumbnailViewerH,
-              width: _thumbnailViewerW == 0.0
-                  ? widget.viewerWidth
-                  : _thumbnailViewerW,
+              width: _thumbnailViewerW == 0.0 ? widget.viewerWidth : _thumbnailViewerW,
               child: Stack(
-                clipBehavior: Clip.none, // Để Handle lòi ra ngoài không bị cắt
+                clipBehavior: Clip.none, // Để Handle không bị cắt
                 children: [
-                  // Lớp 1: Nền & Thumbnails
+                  // Lớp 1: Thumbnails nền
                   ClipRRect(
-                    borderRadius:
-                        BorderRadius.circular(widget.areaProperties.borderRadius),
+                    borderRadius: BorderRadius.circular(widget.areaProperties.borderRadius),
                     child: Container(
                       key: _trimmerAreaKey,
                       color: Colors.grey[900],
                       height: _thumbnailViewerH,
-                      width: _thumbnailViewerW == 0.0
-                          ? widget.viewerWidth
-                          : _thumbnailViewerW,
+                      width: _thumbnailViewerW == 0.0 ? widget.viewerWidth : _thumbnailViewerW,
                       child: thumbnailWidget ?? Container(),
                     ),
                   ),
@@ -492,22 +373,16 @@ class _FixedTrimViewerState extends State<FixedTrimViewer>
                   // Lớp 2: Blur 2 bên
                   if (widget.areaProperties.blurEdges) ...[
                     Positioned(
-                      left: 0,
-                      width: _startPos.dx,
-                      top: 0,
-                      bottom: 0,
+                      left: 0, width: _startPos.dx, top: 0, bottom: 0,
                       child: Container(color: widget.areaProperties.blurColor),
                     ),
                     Positioned(
-                      left: _endPos.dx,
-                      right: 0,
-                      top: 0,
-                      bottom: 0,
+                      left: _endPos.dx, right: 0, top: 0, bottom: 0,
                       child: Container(color: widget.areaProperties.blurColor),
                     ),
                   ],
 
-                  // Lớp 3: Viền (Border)
+                  // Lớp 3: Viền (Border) - Vẽ trước
                   CustomPaint(
                     foregroundPainter: TrimEditorPainter(
                       startPos: _startPos,
@@ -520,30 +395,25 @@ class _FixedTrimViewerState extends State<FixedTrimViewer>
                       scrubberWidth: widget.editorProperties.scrubberWidth,
                       circlePaintColor: widget.editorProperties.circlePaintColor,
                       borderPaintColor: widget.editorProperties.borderPaintColor,
-                      scrubberPaintColor:
-                          widget.editorProperties.scrubberPaintColor,
+                      scrubberPaintColor: widget.editorProperties.scrubberPaintColor,
                     ),
                   ),
-                  
-                  // Lớp 4: Handle Start
+
+                  // Lớp 4: Handle Trái
                   if (widget.areaProperties.startIcon != null)
                     Positioned(
-                      // Left: Dịch sang trái 16px (width icon), cộng 2px (nửa viền) để đè lên -> Liền mạch
-                      left: _startPos.dx - 16 + (borderWidth / 2),
-                      // Top/Bottom: 0 để FULL chiều cao -> Thẳng tắp với khung
-                      top: 0,
-                      bottom: 0,
+                      // Left: Start - 16px (width icon) + 4px (border) -> Đè lên viền
+                      left: _startPos.dx - 16 + borderWidth,
+                      top: 0, bottom: 0,
                       child: widget.areaProperties.startIcon!,
                     ),
-                  
-                  // Lớp 5: Handle End
+
+                  // Lớp 5: Handle Phải
                   if (widget.areaProperties.endIcon != null)
                     Positioned(
-                      // Left: Dịch sang trái 2px (nửa viền) để đè lên -> Liền mạch
-                      left: _endPos.dx - (borderWidth / 2),
-                      // Top/Bottom: 0 để FULL chiều cao -> Thẳng tắp với khung
-                      top: 0,
-                      bottom: 0,
+                      // Left: End - 4px (border) -> Đè lên viền
+                      left: _endPos.dx - borderWidth,
+                      top: 0, bottom: 0,
                       child: widget.areaProperties.endIcon!,
                     ),
                 ],
