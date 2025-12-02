@@ -437,22 +437,19 @@ class _FixedTrimViewerState extends State<FixedTrimViewer>
                       mainAxisSize: MainAxisSize.max,
                       children: <Widget>[
                         Text(
-                          Duration(milliseconds: _videoStartPos.toInt())
-                              .format(widget.durationStyle),
-                          style: widget.durationTextStyle,
-                        ),
+                            Duration(milliseconds: _videoStartPos.toInt())
+                                .format(widget.durationStyle),
+                            style: widget.durationTextStyle),
                         videoPlayerController.value.isPlaying
                             ? Text(
                                 Duration(milliseconds: _currentPosition.toInt())
                                     .format(widget.durationStyle),
-                                style: widget.durationTextStyle,
-                              )
+                                style: widget.durationTextStyle)
                             : Container(),
                         Text(
-                          Duration(milliseconds: _videoEndPos.toInt())
-                              .format(widget.durationStyle),
-                          style: widget.durationTextStyle,
-                        ),
+                            Duration(milliseconds: _videoEndPos.toInt())
+                                .format(widget.durationStyle),
+                            style: widget.durationTextStyle),
                       ],
                     ),
                   ),
@@ -464,6 +461,7 @@ class _FixedTrimViewerState extends State<FixedTrimViewer>
                 ? widget.viewerWidth
                 : _thumbnailViewerW,
             child: Stack(
+              clipBehavior: Clip.none,
               children: [
                 ClipRRect(
                   borderRadius:
@@ -484,18 +482,14 @@ class _FixedTrimViewerState extends State<FixedTrimViewer>
                     width: _startPos.dx,
                     top: 0,
                     bottom: 0,
-                    child: Container(
-                      color: widget.areaProperties.blurColor,
-                    ),
+                    child: Container(color: widget.areaProperties.blurColor),
                   ),
                   Positioned(
                     left: _endPos.dx,
                     right: 0,
                     top: 0,
                     bottom: 0,
-                    child: Container(
-                      color: widget.areaProperties.blurColor,
-                    ),
+                    child: Container(color: widget.areaProperties.blurColor),
                   ),
                 ],
                 CustomPaint(
@@ -516,14 +510,14 @@ class _FixedTrimViewerState extends State<FixedTrimViewer>
                 ),
                 if (widget.areaProperties.startIcon != null)
                   Positioned(
-                    left: _startPos.dx,
+                    left: _startPos.dx - 16,
                     top: 0,
                     bottom: 0,
                     child: widget.areaProperties.startIcon!,
                   ),
                 if (widget.areaProperties.endIcon != null)
                   Positioned(
-                    left: _endPos.dx - 16,
+                    left: _endPos.dx,
                     top: 0,
                     bottom: 0,
                     child: widget.areaProperties.endIcon!,
