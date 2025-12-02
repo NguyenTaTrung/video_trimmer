@@ -253,11 +253,7 @@ class _TrimViewerState extends State<TrimViewer> with TickerProviderStateMixin {
       onChangeEnd: widget.onChangeEnd,
       onChangePlaybackState: widget.onChangePlaybackState,
       editorProperties: widget.editorProperties,
-      areaProperties: FixedTrimAreaProperties(
-        thumbnailFit: widget.areaProperties.thumbnailFit,
-        thumbnailQuality: widget.areaProperties.thumbnailQuality,
-        borderRadius: widget.areaProperties.borderRadius,
-      ),
+      areaProperties:  widget.areaProperties,
       onThumbnailLoadingComplete: () {
         if (widget.onThumbnailLoadingComplete != null) {
           widget.onThumbnailLoadingComplete!();
