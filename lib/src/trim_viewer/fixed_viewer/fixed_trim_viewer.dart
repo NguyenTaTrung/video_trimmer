@@ -64,7 +64,7 @@ class FixedTrimViewer extends StatefulWidget {
   final TrimEditorProperties editorProperties;
 
   /// Properties for customizing the fixed trim area.
-  final FixedTrimAreaProperties areaProperties;
+  final TrimAreaProperties areaProperties;
 
   final VoidCallback onThumbnailLoadingComplete;
 
