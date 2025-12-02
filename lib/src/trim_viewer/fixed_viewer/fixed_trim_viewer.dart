@@ -312,10 +312,13 @@ class _FixedTrimViewerState extends State<FixedTrimViewer>
     final startDifference = _startPos.dx - details.localPosition.dx;
     final endDifference = _endPos.dx - details.localPosition.dx;
 
+    const double iconTouchBuffer = 30.0; 
+    final double effectiveTapSize = widget.editorProperties.sideTapSize + iconTouchBuffer;
+
     // First we determine whether the dragging motion should be allowed. The allowed
     // zone is widget.sideTapSize (left) + frame (center) + widget.sideTapSize (right)
-    if (startDifference <= widget.editorProperties.sideTapSize &&
-        endDifference >= -widget.editorProperties.sideTapSize) {
+    if (startDifference <= effectiveTapSize &&
+        endDifference >= -effectiveTapSize) {
       _allowDrag = true;
     } else {
       debugPrint("Dragging is outside of frame, ignoring gesture...");
