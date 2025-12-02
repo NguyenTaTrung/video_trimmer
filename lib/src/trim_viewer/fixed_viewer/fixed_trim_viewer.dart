@@ -458,32 +458,77 @@ class _FixedTrimViewerState extends State<FixedTrimViewer>
                   ),
                 )
               : Container(),
-          CustomPaint(
-            foregroundPainter: TrimEditorPainter(
-              startPos: _startPos,
-              endPos: _endPos,
-              scrubberAnimationDx: _scrubberAnimation?.value ?? 0,
-              startCircleSize: _startCircleSize,
-              endCircleSize: _endCircleSize,
-              borderRadius: _borderRadius,
-              borderWidth: widget.editorProperties.borderWidth,
-              scrubberWidth: widget.editorProperties.scrubberWidth,
-              circlePaintColor: widget.editorProperties.circlePaintColor,
-              borderPaintColor: widget.editorProperties.borderPaintColor,
-              scrubberPaintColor: widget.editorProperties.scrubberPaintColor,
-            ),
-            child: ClipRRect(
-              borderRadius:
-                  BorderRadius.circular(widget.areaProperties.borderRadius),
-              child: Container(
-                key: _trimmerAreaKey,
-                color: Colors.grey[900],
-                height: _thumbnailViewerH,
-                width: _thumbnailViewerW == 0.0
-                    ? widget.viewerWidth
-                    : _thumbnailViewerW,
-                child: thumbnailWidget ?? Container(),
-              ),
+          SizedBox(
+            height: _thumbnailViewerH,
+            width: _thumbnailViewerW == 0.0
+                ? widget.viewerWidth
+                : _thumbnailViewerW,
+            child: Stack(
+              children: [
+                ClipRRect(
+                  borderRadius:
+                      BorderRadius.circular(widget.areaProperties.borderRadius),
+                  child: Container(
+                    key: _trimmerAreaKey,
+                    color: Colors.grey[900],
+                    height: _thumbnailViewerH,
+                    width: _thumbnailViewerW == 0.0
+                        ? widget.viewerWidth
+                        : _thumbnailViewerW,
+                    child: thumbnailWidget ?? Container(),
+                  ),
+                ),
+                if (widget.areaProperties.blurEdges) ...[
+                  Positioned(
+                    left: 0,
+                    width: _startPos.dx,
+                    top: 0,
+                    bottom: 0,
+                    child: Container(
+                      color: widget.areaProperties.blurColor,
+                    ),
+                  ),
+                  Positioned(
+                    left: _endPos.dx,
+                    right: 0,
+                    top: 0,
+                    bottom: 0,
+                    child: Container(
+                      color: widget.areaProperties.blurColor,
+                    ),
+                  ),
+                ],
+                CustomPaint(
+                  foregroundPainter: TrimEditorPainter(
+                    startPos: _startPos,
+                    endPos: _endPos,
+                    scrubberAnimationDx: _scrubberAnimation?.value ?? 0,
+                    startCircleSize: _startCircleSize,
+                    endCircleSize: _endCircleSize,
+                    borderRadius: _borderRadius,
+                    borderWidth: widget.editorProperties.borderWidth,
+                    scrubberWidth: widget.editorProperties.scrubberWidth,
+                    circlePaintColor: widget.editorProperties.circlePaintColor,
+                    borderPaintColor: widget.editorProperties.borderPaintColor,
+                    scrubberPaintColor:
+                        widget.editorProperties.scrubberPaintColor,
+                  ),
+                ),
+                if (widget.areaProperties.startIcon != null)
+                  Positioned(
+                    left: _startPos.dx,
+                    top: 0,
+                    bottom: 0,
+                    child: widget.areaProperties.startIcon!,
+                  ),
+                if (widget.areaProperties.endIcon != null)
+                  Positioned(
+                    left: _endPos.dx - 16,
+                    top: 0,
+                    bottom: 0,
+                    child: widget.areaProperties.endIcon!,
+                  ),
+              ],
             ),
           ),
         ],
