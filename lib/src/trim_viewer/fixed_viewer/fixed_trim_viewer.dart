@@ -421,7 +421,7 @@ class _FixedTrimViewerState extends State<FixedTrimViewer>
   @override
   Widget build(BuildContext context) {
     final double borderWidth = widget.editorProperties.borderWidth;
-    final double touchPadding = 16.0;
+    final double touchPadding = 24.0;
 
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
