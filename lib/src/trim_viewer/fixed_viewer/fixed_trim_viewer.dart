@@ -168,6 +168,8 @@ class _FixedTrimViewerState extends State<FixedTrimViewer>
   AnimationController? _animationController;
   late Tween<double> _linearTween;
 
+  final double _handleWidth = 16.0;
+
   /// Quick access to VideoPlayerController, only not null after [TrimmerEvent.initialized]
   /// has been emitted.
   VideoPlayerController get videoPlayerController =>
@@ -304,31 +306,26 @@ class _FixedTrimViewerState extends State<FixedTrimViewer>
   /// Called when the user starts dragging the frame, on either side on the whole frame.
   /// Determine which [EditorDragType] is used.
   void _onDragStart(DragStartDetails details) {
-    debugPrint("_onDragStart");
-    debugPrint(details.localPosition.toString());
-    debugPrint((_startPos.dx - details.localPosition.dx).abs().toString());
-    debugPrint((_endPos.dx - details.localPosition.dx).abs().toString());
+    // ---> SỬA DÒNG NÀY: Trừ đi chiều rộng tai để lấy toạ độ thực trên video
+    final touchX = details.localPosition.dx - _handleWidth; 
 
-    final startDifference = _startPos.dx - details.localPosition.dx;
-    final endDifference = _endPos.dx - details.localPosition.dx;
+    // Các dòng dưới thay thế _startPos.dx bằng touchX
+    final startDifference = _startPos.dx - touchX;
+    final endDifference = _endPos.dx - touchX;
 
-    // First we determine whether the dragging motion should be allowed. The allowed
-    // zone is widget.sideTapSize (left) + frame (center) + widget.sideTapSize (right)
-    if (startDifference <= widget.editorProperties.sideTapSize &&
-        endDifference >= -widget.editorProperties.sideTapSize) {
+    // ---> SỬA DÒNG NÀY: Cộng thêm handleWidth vào vùng nhận diện
+    if (startDifference <= widget.editorProperties.sideTapSize + _handleWidth &&
+        endDifference >= -widget.editorProperties.sideTapSize - _handleWidth) {
       _allowDrag = true;
     } else {
-      debugPrint("Dragging is outside of frame, ignoring gesture...");
       _allowDrag = false;
       return;
     }
 
-    // Now we determine which part is dragged
-    if (details.localPosition.dx <=
-        _startPos.dx + widget.editorProperties.sideTapSize) {
+    // ---> SỬA CÁC DÒNG CHECK LOGIC: Dùng touchX thay vì details.localPosition.dx
+    if (touchX <= _startPos.dx + widget.editorProperties.sideTapSize) {
       _dragType = EditorDragType.left;
-    } else if (details.localPosition.dx <=
-        _endPos.dx - widget.editorProperties.sideTapSize) {
+    } else if (touchX <= _endPos.dx - widget.editorProperties.sideTapSize) {
       _dragType = EditorDragType.center;
     } else {
       _dragType = EditorDragType.right;
@@ -421,7 +418,6 @@ class _FixedTrimViewerState extends State<FixedTrimViewer>
   @override
   Widget build(BuildContext context) {
     final double borderWidth = widget.editorProperties.borderWidth;
-    final double touchPadding = 24.0;
 
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
@@ -429,7 +425,7 @@ class _FixedTrimViewerState extends State<FixedTrimViewer>
       onHorizontalDragUpdate: _onDragUpdate,
       onHorizontalDragEnd: _onDragEnd,
       child: Container(
-        padding: EdgeInsets.symmetric(vertical: touchPadding),
+        padding: EdgeInsets.symmetric(horizontal: _handleWidth),
         color: Colors.transparent,
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -513,7 +509,7 @@ class _FixedTrimViewerState extends State<FixedTrimViewer>
                   ),
                   if (widget.areaProperties.startIcon != null)
                     Positioned(
-                      left: _startPos.dx - 16,
+                      left: _startPos.dx - _handleWidth,
                       top: - borderWidth / 2,
                       bottom: - borderWidth / 2,
                       child: widget.areaProperties.startIcon!,
