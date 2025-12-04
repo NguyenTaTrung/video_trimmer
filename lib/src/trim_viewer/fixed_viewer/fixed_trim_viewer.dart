@@ -130,10 +130,10 @@ class FixedTrimViewer extends StatefulWidget {
   });
 
   @override
-  State<FixedTrimViewer> createState() => _FixedTrimViewerState();
+  State<FixedTrimViewer> createState() => FixedTrimViewerState();
 }
 
-class _FixedTrimViewerState extends State<FixedTrimViewer>
+class FixedTrimViewerState extends State<FixedTrimViewer>
     with TickerProviderStateMixin {
   final _trimmerAreaKey = GlobalKey();
   File? get _videoFile => widget.trimmer.currentVideoFile;
@@ -400,6 +400,57 @@ class _FixedTrimViewerState extends State<FixedTrimViewer>
         videoPlayerController
             .seekTo(Duration(milliseconds: _videoStartPos.toInt()));
       }
+    });
+  }
+
+  /// Hàm cập nhật vị trí Start Handle từ bên ngoài (Code thêm mới)
+  void updateStart(Duration newStart) {
+    if (_thumbnailViewerW == 0.0 || _videoDuration == 0) return;
+
+    double newStartMillis = newStart.inMilliseconds.toDouble();
+    
+    // Validate: Không được lớn hơn End
+    if (newStartMillis >= _videoEndPos) return;
+
+    setState(() {
+      _videoStartPos = newStartMillis;
+      
+      // Tính toán lại toạ độ X (Pixel) dựa trên thời gian
+      // Công thức: (Thời gian / Tổng thời gian) * Chiều rộng thanh hiển thị
+      final double newX = (_videoStartPos / _videoDuration) * _thumbnailViewerW;
+      
+      _startPos = Offset(newX, 0);
+      _startFraction = _videoStartPos / _videoDuration;
+      
+      // Cập nhật lại Animation Controller để scrubber chạy đúng khoảng mới
+      _linearTween.begin = _startPos.dx;
+      _animationController!.duration =
+          Duration(milliseconds: (_videoEndPos - _videoStartPos).toInt());
+    });
+  }
+
+  /// Hàm cập nhật vị trí End Handle từ bên ngoài (Code thêm mới)
+  void updateEnd(Duration newEnd) {
+    if (_thumbnailViewerW == 0.0 || _videoDuration == 0) return;
+
+    double newEndMillis = newEnd.inMilliseconds.toDouble();
+
+    // Validate: Không được nhỏ hơn Start
+    if (newEndMillis <= _videoStartPos) return;
+
+    setState(() {
+      _videoEndPos = newEndMillis;
+
+      // Tính toán lại toạ độ X
+      final double newX = (_videoEndPos / _videoDuration) * _thumbnailViewerW;
+      
+      _endPos = Offset(newX, _thumbnailViewerH); // EndPos có y = height
+      _endFraction = _videoEndPos / _videoDuration;
+
+      // Cập nhật Animation Controller
+      _linearTween.end = _endPos.dx;
+      _animationController!.duration =
+          Duration(milliseconds: (_videoEndPos - _videoStartPos).toInt());
     });
   }
 

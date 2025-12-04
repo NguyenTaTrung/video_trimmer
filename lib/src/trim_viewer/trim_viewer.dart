@@ -167,9 +167,12 @@ class TrimViewer extends StatefulWidget {
   /// * [onThumbnailLoadingComplete] is a callback for thumbnail loader to
   /// know when all the thumbnails are loaded.
   ///
+  final Key? fixedViewerKey;
+
   const TrimViewer({
     super.key,
     required this.trimmer,
+    this.fixedViewerKey,
     this.maxVideoLength = const Duration(milliseconds: 0),
     this.type = ViewerType.auto,
     this.viewerWidth = 50 * 8,
@@ -242,6 +245,7 @@ class _TrimViewerState extends State<TrimViewer> with TickerProviderStateMixin {
     );
 
     final fixedTrimViewer = FixedTrimViewer(
+      key: widget.fixedViewerKey,
       trimmer: widget.trimmer,
       maxVideoLength: widget.maxVideoLength,
       viewerWidth: widget.viewerWidth,
